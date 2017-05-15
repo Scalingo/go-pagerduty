@@ -13,37 +13,33 @@ import (
 var endpoint = "https://events.pagerduty.com/v2/enqueue"
 
 const (
-	EventActionTrigger     = "trigger"
+	// EventActionTrigger will trigger a new event
+	EventActionTrigger = "trigger"
+	// EventActionAcknowledge will acknowledge the current event
 	EventActionAcknowledge = "acknowledge"
-	EventActionResolve     = "resolve"
+	// EventActionResolve will resolve the current event
+	EventActionResolve = "resolve"
 
+	// SeverityCritical will set the event serverity to critical
 	SeverityCritical = "critical"
-	SeverityError    = "error"
-	SeverityWarning  = "warning"
-	SeverityInfo     = "info"
+	// SeverityError will set the event severity to Error
+	SeverityError = "error"
+	// SeverityWarning will set the event severity to Warning
+	SeverityWarning = "warning"
+	// SeverityInfo will set the event serverity to info
+	SeverityInfo = "info"
 )
 
-type Event struct {
+type event struct {
 	RoutingKey  string   `json:"routing_key"`
 	EventAction string   `json:"event_action"`
 	DeDupKey    string   `json:"dedup_key,omitempty"`
-	Payload     Payload  `json:"payload"`
+	Payload     payload  `json:"payload"`
 	Images      []*Image `json:"images,omitempty"`
 	Links       []*Link  `json:"links,omitempty"`
 }
 
-type Image struct {
-	Src  string `json:"src"`  // The source of the image being attached to the incident. This image must be served via HTTPS.
-	Href string `json:"href"` // Optional URL; makes the image a clickable link.
-	Alt  string `json:"alt"`  // Optional alternative text for the image.
-}
-
-type Link struct {
-	Href string `json:"href"` // URL of the link to be attached.
-	Text string `json:"test"` // Plain text that describes the purpose of the link, and can be used as the link's text.
-}
-
-type Payload struct {
+type payload struct {
 	Source        string      `json:"source"`
 	Summary       string      `json:"summary"`
 	Severity      string      `json:"severity"`
@@ -53,12 +49,27 @@ type Payload struct {
 	CustomDetails interface{} `json:"custom_details,omitempty"`
 }
 
+// Image is a structure that represent an image linked to the event
+type Image struct {
+	Src  string `json:"src"`  // Src represent the source of the image being attached to the incident. This image must be served via HTTPS.
+	Href string `json:"href"` // Href: Optional URL; makes the image a clickable link.
+	Alt  string `json:"alt"`  // Alt: Optional alternative text for the image.
+}
+
+// Link is a structure that represent a link linked to the event
+type Link struct {
+	Href string `json:"href"` // URL of the link to be attached.
+	Text string `json:"test"` // Plain text that describes the purpose of the link, and can be used as the link's text.
+}
+
+// Response represent an api response
 type Response struct {
 	Status   string `json:"status"`
 	Message  string `json:"message"`
 	DeDupKey string `json:"dedup_key"`
 }
 
+// EventOptions is the structure used to pass optionnal options
 type EventOptions struct {
 	DeDupKey      string
 	Component     string
@@ -69,8 +80,9 @@ type EventOptions struct {
 	Links         []*Link
 }
 
-func SendEvent(key, event_action, source, severity, summary string, options EventOptions) (*Response, error) {
-	payload := Payload{
+// SendEvent Send the event to PagerDuty
+func SendEvent(key, eventAction, source, severity, summary string, options EventOptions) (*Response, error) {
+	payload := payload{
 		Summary:       summary,
 		Source:        source,
 		Severity:      severity,
@@ -80,9 +92,9 @@ func SendEvent(key, event_action, source, severity, summary string, options Even
 		CustomDetails: options.CustomDetails,
 	}
 
-	event := Event{
+	event := event{
 		RoutingKey:  key,
-		EventAction: event_action,
+		EventAction: eventAction,
 		DeDupKey:    options.DeDupKey,
 		Payload:     payload,
 		Images:      options.Images,
