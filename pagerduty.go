@@ -1,33 +1,30 @@
+// Package pagerduty provides a client for the PagerDuty EventsAPI v2
 package pagerduty
-
-import (
-	"bytes"
-	"encoding/json"
-	"errors"
-	"io/ioutil"
-	"net/http"
-
-	errgo "gopkg.in/errgo.v1"
-)
 
 var endpoint = "https://events.pagerduty.com/v2/enqueue"
 
+// EventAction define the type of event (can be Acknowledge, Trigger, Resolve)
+type EventAction string
+
+// Severity is the perceived severity of the status the event is describing with respect to the affected system (can be Critical, Errorn Warning, Info)
+type Severity string
+
 const (
 	// EventActionTrigger will trigger a new event
-	EventActionTrigger = "trigger"
+	EventActionTrigger EventAction = "trigger"
 	// EventActionAcknowledge will acknowledge the current event
-	EventActionAcknowledge = "acknowledge"
+	EventActionAcknowledge EventAction = "acknowledge"
 	// EventActionResolve will resolve the current event
-	EventActionResolve = "resolve"
+	EventActionResolve EventAction = "resolve"
 
 	// SeverityCritical will set the event serverity to critical
-	SeverityCritical = "critical"
+	SeverityCritical Severity = "critical"
 	// SeverityError will set the event severity to Error
-	SeverityError = "error"
+	SeverityError Severity = "error"
 	// SeverityWarning will set the event severity to Warning
-	SeverityWarning = "warning"
+	SeverityWarning Severity = "warning"
 	// SeverityInfo will set the event serverity to info
-	SeverityInfo = "info"
+	SeverityInfo Severity = "info"
 )
 
 type event struct {
@@ -71,64 +68,11 @@ type Response struct {
 
 // EventOptions is the structure used to pass optionnal options
 type EventOptions struct {
-	DeDupKey      string
-	Component     string
-	Group         string
-	Class         string
-	CustomDetails interface{}
-	Images        []*Image
-	Links         []*Link
-}
-
-// SendEvent Send the event to PagerDuty
-func SendEvent(key, eventAction, source, severity, summary string, options EventOptions) (*Response, error) {
-	payload := payload{
-		Summary:       summary,
-		Source:        source,
-		Severity:      severity,
-		Component:     options.Component,
-		Group:         options.Group,
-		Class:         options.Class,
-		CustomDetails: options.CustomDetails,
-	}
-
-	event := event{
-		RoutingKey:  key,
-		EventAction: eventAction,
-		DeDupKey:    options.DeDupKey,
-		Payload:     payload,
-		Images:      options.Images,
-		Links:       options.Links,
-	}
-
-	buffer := new(bytes.Buffer)
-
-	err := json.NewEncoder(buffer).Encode(&event)
-
-	if err != nil {
-		return nil, errgo.Notef(err, "Unable to encode json")
-	}
-
-	request, _ := http.NewRequest("POST", endpoint, buffer)
-	request.Header.Set("Content-Type", "application/json")
-
-	resp, err := http.DefaultClient.Do(request)
-	if err != nil {
-		return nil, errgo.Notef(err, "Unable to send event")
-	}
-	defer resp.Body.Close()
-
-	if resp.Status[0] != '2' {
-		body, _ := ioutil.ReadAll(resp.Body)
-		return nil, errors.New("Invalid return code: " + resp.Status + " " + string(body))
-	}
-
-	response := &Response{}
-	err = json.NewDecoder(resp.Body).Decode(response)
-
-	if err != nil {
-		return nil, errgo.Notef(err, "Unable to read response")
-	}
-
-	return response, nil
+	DeDupKey      string      // DeDupKey: Deduplication key for correlating triggers and resolves
+	Component     string      // Component: Component of the source machine that is responsible for the event
+	Group         string      // Group: Logical grouping of components of a service
+	Class         string      // Class: The class/type of the event
+	CustomDetails interface{} // CustomDetails: Additional details about the event and affected system
+	Images        []*Image    // Images: List of images to include
+	Links         []*Link     // Links: List of links to include
 }

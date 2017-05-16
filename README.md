@@ -34,7 +34,9 @@ Example:
 
   group := "hardware-issues"
 
-  resp err := pagerduty.SendEvent(key, eventAction, source, severity, summary, pagerduty.EventOptions{
+  client := pagerduty.NewClient(key)
+
+  resp err := client.SendEvent(eventAction, source, severity, summary, pagerduty.EventOptions{
     Source: source,
     Component: component,
     Group: group,
