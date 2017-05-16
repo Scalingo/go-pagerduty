@@ -4,7 +4,7 @@ This package provide a simple client for the PagerDuty Event API.
 
 There is only one method: `SendEvent` this method will send an event to the API.
 
-## How to use it:
+## How to use it:
 
 Example:
 
