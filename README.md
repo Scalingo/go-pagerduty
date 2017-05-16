@@ -1,4 +1,5 @@
 # go-pagerduty is a client for the PagerDuty Event API (v2)
+[![Godoc](http://b.repl.ca/v1/doc-GoDoc-brightgreen.png)](https://godoc.org/github.com/Scalingo/go-pagerduty)
 
 This package provide a simple client for the PagerDuty Event API.
 
